@@ -130,8 +130,8 @@ export default function PropeneerDashboard() {
         } transition-transform duration-300 ease-in-out overflow-y-auto`}
       >
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h1 className="text-2xl font-bold text-blue-700">
-            Globalis<span className="text-blue-500">Bank</span>
+          <h1 className="text-2xl font-bold text-primary-700">
+            Globalis<span className="text-primary-500">Bank</span>
           </h1>
           <button className="lg:hidden" onClick={() => setSidebarOpen(false)}>
             <X size={24} className="text-gray-500" />
@@ -141,7 +141,7 @@ export default function PropeneerDashboard() {
 
         <div className="p-4">
           <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
-            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+            <div className="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold">
               {initials}
             </div>
             <div>
@@ -159,28 +159,28 @@ export default function PropeneerDashboard() {
           </div>
           <Link
             href="/dashboard"
-            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-blue-700 bg-blue-50 border-l-4 border-blue-600"
+            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-primary-700 bg-primary-100 border-l-4 border-primary-600"
           >
             <BarChart3 size={18} />
             <span>Dashboard</span>
           </Link>
           <Link
             href="/propeneer-dashboard"
-            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-primary-100"
           >
             <Users size={18} />
             <span>Users</span>
           </Link>
           <Link
             href="/propeneer-transactions"
-            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-primary-100"
           >
             <ArrowUpDown size={18} />
             <span>Transactions</span>
           </Link>
           <Link
             href="/#"
-            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-primary-100"
           >
             <CreditCard size={18} />
             <span>Accounts</span>
@@ -193,7 +193,7 @@ export default function PropeneerDashboard() {
           </div>
           <Link
             href="/propeneer-settings"
-            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-primary-100"
           >
             <Wallet size={18} />
             <span>Banking Settings</span>
@@ -234,7 +234,7 @@ export default function PropeneerDashboard() {
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center"></span>
               </button>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium">
+                <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white font-medium">
                   {initials}
                 </div>
                 <span className="text-sm font-medium hidden sm:inline">
@@ -252,8 +252,8 @@ export default function PropeneerDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 shadow-sm">
               <div className="flex items-center gap-3 sm:gap-4 ">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-blue-50 flex items-center justify-center">
-                  <Wallet className="text-blue-600 w-5 h-5 sm:w-6 sm:h-6" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary-100 flex items-center justify-center">
+                  <Wallet className="text-primary-600 w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div>
                   <p className="text-xs sm:text-sm font-medium text-gray-500">
@@ -267,8 +267,8 @@ export default function PropeneerDashboard() {
             </div>
             <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 shadow-sm">
               <div className="flex items-center gap-3 sm:gap-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-green-50 flex items-center justify-center">
-                  <Users className="text-green-600 w-5 h-5 sm:w-6 sm:h-6" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary-100 flex items-center justify-center">
+                  <Users className="text-primary-600 w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div>
                   <p className="text-xs sm:text-sm font-medium text-gray-500">
@@ -282,8 +282,8 @@ export default function PropeneerDashboard() {
             </div>
             <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 shadow-sm">
               <div className="flex items-center gap-3 sm:gap-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-purple-50 flex items-center justify-center">
-                  <BarChart3 className="text-purple-600 w-5 h-5 sm:w-6 sm:h-6" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary-100 flex items-center justify-center">
+                  <BarChart3 className="text-primary-600 w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div>
                   <p className="text-xs sm:text-sm font-medium text-gray-500">
@@ -297,8 +297,8 @@ export default function PropeneerDashboard() {
             </div>
             <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 shadow-sm">
               <div className="flex items-center gap-3 sm:gap-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-amber-50 flex items-center justify-center">
-                  <CreditCard className="text-amber-600 w-5 h-5 sm:w-6 sm:h-6" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary-100 flex items-center justify-center">
+                  <CreditCard className="text-primary-600 w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div>
                   <p className="text-xs sm:text-sm font-medium text-gray-500">
@@ -322,7 +322,7 @@ export default function PropeneerDashboard() {
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   <button
                     onClick={() => setShowTransferModal(true)}
-                    className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+                    className="px-3 sm:px-4 py-2 bg-primary-600 text-white rounded-md text-sm font-medium hover:bg-primary-700 transition-colors"
                   >
                     New Transfer
                   </button>
@@ -341,7 +341,7 @@ export default function PropeneerDashboard() {
             <div className="p-4 sm:p-6 overflow-x-auto">
               {loading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
                 </div>
               ) : (
                 <div className="min-w-full">

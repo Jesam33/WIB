@@ -78,7 +78,7 @@ export default function TransactionTable({ transactions }) {
       <div className="flex justify-between items-center px-4 py-3 border-b bg-gray-50">
         <h2 className="text-lg font-semibold text-gray-800">Transaction History</h2>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-1 text-sm text-gray-600 px-2 py-1 rounded hover:bg-gray-100">
+          <button className="flex items-center gap-1 text-sm bg-primary-600 text-gray-600 px-2 py-1 rounded hover:bg-gray-100">
             <Filter size={16} />
             <span className="hidden sm:inline">Filter</span>
           </button>
@@ -151,7 +151,7 @@ export default function TransactionTable({ transactions }) {
                         <span className="text-gray-700 text-sm font-medium">{formatTransactionId(txn._id)}</span>
                         <button
                           onClick={() => copyToClipboard(txn._id)}
-                          className="text-gray-400 hover:text-blue-600 transition-colors"
+                          className="text-gray-400 hover:text-primary-600 transition-colors"
                           title="Copy Transaction ID"
                         >
                           {copiedId === txn._id ? (
@@ -198,7 +198,7 @@ export default function TransactionTable({ transactions }) {
                             e.stopPropagation();
                             copyToClipboard(txn._id);
                           }}
-                          className="text-gray-400 hover:text-blue-600 transition-colors"
+                          className="text-gray-400 hover:text-primary-600 transition-colors"
                         >
                           {copiedId === txn._id ? (
                             <CheckCircle size={14} className="text-green-500" />
