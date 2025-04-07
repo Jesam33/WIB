@@ -115,9 +115,6 @@ export default function History() {
   useEffect(() => {
     getUser();
     fetchTransactions();
-
-    const interval = setInterval(fetchTransactions, getUser, 30000); // Every 30 seconds
-    return () => clearInterval(interval);
   }, []);
 
   // Close sidebar when clicking outside on mobile
