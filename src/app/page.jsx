@@ -674,7 +674,7 @@ function TestimonialSlider() {
       role: "Small Business Owner",
       image: "/testimonials/SarahJohnson.jpg",
       content:
-        "Global Online Banking has transformed how I manage my business finances. The real-time analytics and seamless international transfers have saved me countless hours and reduced costs significantly.",
+        "Western Intercontinental Bank has transformed how I manage my business finances. The real-time analytics and seamless international transfers have saved me countless hours and reduced costs significantly.",
     },
     {
       name: "Michael Damian",
