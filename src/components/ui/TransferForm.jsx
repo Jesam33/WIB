@@ -63,7 +63,7 @@ export default function PropeneerTransferForm({ setTransactions }) {
       );
 
       setSuccess("Transfer initiated successfully!");
-      setTransactions((prev) => [res.data.transaction, ...prev]); 
+      setTransactions((prev) => [res.data.transaction, ...prev]); // Add new transaction
       setAccountNumber("");
       setAmount("");
       setReceiver(null); // Reset receiver

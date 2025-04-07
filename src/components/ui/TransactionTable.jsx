@@ -108,7 +108,17 @@ export default function TransactionTable({ transactions }) {
                       )}
                     </div>
                   </th>
-              
+                  <th 
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    onClick={() => requestSort('receiver')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Receiver
+                      {sortConfig.key === 'receiver' && (
+                        sortConfig.direction === 'asc' ? <ChevronUp size={16} /> : <ChevronDown size={16} />
+                      )}
+                    </div>
+                  </th>
                   <th 
                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                     onClick={() => requestSort('amount')}
@@ -152,7 +162,9 @@ export default function TransactionTable({ transactions }) {
                         </button>
                       </div>
                     </td>
-                 
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{txn.receiver.firstName} {txn.receiver.lastName}</div>
+                    </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">${(txn.amount || 0).toLocaleString()}</div>
                     </td>
@@ -195,7 +207,9 @@ export default function TransactionTable({ transactions }) {
                           )}
                         </button>
                       </div>
-                   
+                      <div className="text-sm text-gray-500 mt-1">
+                        To: {txn.receiver.firstName} {txn.receiver.lastName}
+                      </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-right">
@@ -219,6 +233,8 @@ export default function TransactionTable({ transactions }) {
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div className="text-gray-500">Full ID:</div>
                         <div className="text-gray-900 break-all">{txn._id}</div>
+                        <div className="text-gray-500">Receiver:</div>
+                        <div className="text-gray-900">{txn.receiver.firstName} {txn.receiver.lastName}</div>
                         <div className="text-gray-500">Amount:</div>
                         <div className="text-gray-900">${(txn.amount || 0).toLocaleString()}</div>
                         <div className="text-gray-500">Status:</div>
