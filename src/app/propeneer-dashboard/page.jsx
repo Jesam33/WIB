@@ -65,8 +65,6 @@ export default function PropeneerDashboard() {
   useEffect(() => {
     fetchTransactions();
     fetchUserCount();
-    const interval = setInterval(fetchTransactions, 60000);
-    return () => clearInterval(interval);
   }, []);
 
   return (
