@@ -116,7 +116,7 @@ export default function History() {
     getUser();
     fetchTransactions();
 
-    const interval = setInterval(fetchTransactions, getUser, 30000); // Every 30 seconds
+    const interval = setInterval(fetchTransactions, getUser, 60000); 
     return () => clearInterval(interval);
   }, []);
 

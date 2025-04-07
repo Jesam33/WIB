@@ -1,161 +1,441 @@
-import React, { useState } from "react";
-import { MessageCircle, X, ChevronRight, ChevronLeft, HelpCircle } from "lucide-react";
+"use client";
+import React, { useState, useEffect, useRef } from "react";
+import { MessageCircle, X, Send, HelpCircle } from "lucide-react";
+import io from "socket.io-client";
+import axios from "axios";
 
-// Main Customer Care Modal Component
 const CustomerCareModal = ({ isOpen, onClose }) => {
-  const [selectedQuestion, setSelectedQuestion] = useState(null);
-  const [showingResponse, setShowingResponse] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [connectionStatus, setConnectionStatus] = useState("disconnected"); // 'disconnected', 'connecting', 'connected', 'error'
+  const [user, setUser] = useState(null);
+  const [currentThread, setCurrentThread] = useState(null);
+  const messagesEndRef = useRef(null);
+  const socketRef = useRef(null);
+  const retryTimeoutRef = useRef(null);
 
-  // Pre-defined support questions and answers
-  const supportQuestions = [
-    {
-      id: 1,
-      question: "Why was my transaction declined?",
-      answer: "Transactions may be declined for several reasons including insufficient funds, suspicious activity detected, incorrect account information, or technical issues with our payment processor. If this is a recurring issue, please ensure your account details are up to date and your balance is sufficient for the transaction amount."
-    },
-    {
-      id: 2,
-      question: "How do I update my account information?",
-      answer: "To update your account information, go to your Account Settings page and select the 'Personal Details' section. From there, you can modify your personal information, contact details, and preferences. Don't forget to click 'Save Changes' when you're finished. Please note that some changes may require additional verification."
-    },
-    {
-      id: 3,
-      question: "When will my transfer be completed?",
-      answer: "Most transfers are processed within 1-2 business days. However, international transfers may take 3-5 business days depending on the destination country and banking system. If your transfer has been pending for longer than expected, please wait one more business day before contacting us again."
-    },
-    {
-      id: 4,
-      question: "How do I report unauthorized transactions?",
-      answer: "If you notice any unauthorized transactions on your account, please contact our security team immediately by calling our 24/7 hotline at +1-800-555-0123. For your protection, we recommend changing your password and enabling two-factor authentication on your account."
-    },
-    {
-      id: 5,
-      question: "What are the transfer limits?",
-      answer: "Standard accounts have a daily transfer limit of €10,000 and a monthly limit of €50,000. Premium accounts have higher limits of €25,000 daily and €100,000 monthly. If you need to make a larger transfer, please contact our customer service team to request a temporary limit increase."
-    },
-    {
-      id: 6,
-      question: "I forgot my password, what should I do?",
-      answer: "To reset your password, click on the 'Forgot Password' link on the login page. We'll send a password reset link to your registered email address. For security reasons, this link will expire after 24 hours. If you don't receive the email, please check your spam folder or contact customer support."
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Initialize when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const initializeChat = async () => {
+      try {
+        // 1. Get user data
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("No authentication token");
+
+        const userRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_SERVER_NAME}user`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setUser(userRes.data.user);
+
+        // 2. Setup socket connection
+        setupSocketConnection(userRes.data.user._id, token);
+
+        // 3. Load or create thread
+        await loadOrCreateThread(userRes.data.user._id, token);
+      } catch (error) {
+        console.error("Initialization error:", error);
+        setConnectionStatus("error");
+      }
+    };
+
+    initializeChat();
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [isOpen]);
+
+  const setupSocketConnection = (userId, token) => {
+    setConnectionStatus("connecting");
+
+    if (socketRef.current) {
+      socketRef.current.disconnect();
     }
-  ];
 
-  const handleSelectQuestion = (questionId) => {
-    setSelectedQuestion(questionId);
-    setShowingResponse(true);
+    const socket = io(process.env.NEXT_PUBLIC_SOCKET_SERVER, {
+      auth: { token, userId, role: "user" },
+      reconnectionAttempts: 3,
+      reconnectionDelay: 1000,
+      timeout: 5000,
+    });
+
+    socketRef.current = socket;
+
+    socket.on("connect", () => {
+      setConnectionStatus("connected");
+      console.log("Socket connected");
+    });
+
+    socket.on("disconnect", () => {
+      setConnectionStatus("disconnected");
+      console.log("Socket disconnected");
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("Socket connection error:", err);
+      setConnectionStatus("error");
+      attemptReconnect(userId, token);
+    });
+
+    socket.on("chat-message", (message) => {
+      if (message.threadId === currentThread?._id) {
+        setMessages((prev) => [...prev, message]);
+      }
+    });
   };
 
-  const handleBack = () => {
-    setShowingResponse(false);
+  const attemptReconnect = (userId, token) => {
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+    }
+
+    retryTimeoutRef.current = setTimeout(() => {
+      if (connectionStatus !== "connected" && isOpen) {
+        console.log("Attempting to reconnect...");
+        setupSocketConnection(userId, token);
+      }
+    }, 3000);
   };
 
-  const handleCallSupport = () => {
-    window.location.href = "mailto:sglobalis35@gmail.com"; 
+  const loadOrCreateThread = async (userId, token) => {
+    try {
+      // Try to load existing threads first
+      const threadsRes = await axios.get(
+        `${process.env.NEXT_PUBLIC_SERVER_NAME}chat/user/${userId}/threads`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (threadsRes.data.length > 0) {
+        const thread = threadsRes.data[0];
+        setCurrentThread(thread);
+        await loadThreadMessages(thread._id, token);
+        return;
+      }
+
+      // Create new thread if none exists
+      const newThreadRes = await axios.post(
+        `${process.env.NEXT_PUBLIC_SERVER_NAME}chat/user/${userId}/thread`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setCurrentThread(newThreadRes.data);
+      setMessages([]);
+    } catch (error) {
+      console.error("Thread error:", error);
+      // Fallback to client-side only thread
+      setCurrentThread({
+        _id: `temp-${userId}-${Date.now()}`,
+        userId,
+        createdAt: new Date(),
+      });
+      setMessages([]);
+    }
   };
 
-  const handleEmailSupport = () => {
-    window.location.href = "mailto:sglobalis35@gmail.com";
+  const loadThreadMessages = async (threadId, token) => {
+    try {
+      const messagesRes = await axios.get(
+        `${process.env.NEXT_PUBLIC_SERVER_NAME}chat/thread/${threadId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMessages(messagesRes.data);
+    } catch (error) {
+      console.error("Failed to load messages:", error);
+      setMessages([]);
+    }
   };
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !user?._id || !currentThread) return;
+
+    const message = {
+      _id: Date.now().toString(),
+      sender: user._id,
+      senderModel: "User",
+      content: newMessage,
+      timestamp: new Date(),
+      read: false,
+      threadId: currentThread._id,
+    };
+
+    // Optimistic update
+    setMessages((prev) => [...prev, message]);
+    setNewMessage("");
+
+    try {
+      // Only send to server if not a temporary thread
+      if (!currentThread._id.startsWith("temp-")) {
+        const token = localStorage.getItem("token");
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_SERVER_NAME}chat/user/${user._id}/send`,
+          { content: newMessage, threadId: currentThread._id },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        // Update with server response
+        setMessages((prev) => [
+          ...prev.filter((m) => m._id !== message._id),
+          response.data,
+        ]);
+
+        // Emit via socket if connected
+        if (socketRef.current?.connected) {
+          socketRef.current.emit("send-message", {
+            ...response.data,
+            receiver: "propeneers",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      // Revert optimistic update
+      setMessages((prev) => prev.filter((m) => m._id !== message._id));
+    }
+  };
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   if (!isOpen) return null;
 
-  const selectedQuestionData = supportQuestions.find(q => q.id === selectedQuestion);
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md flex flex-col max-h-[80vh]">
-        {/* Header */}
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md flex flex-col h-[80vh]">
         <div className="flex items-center justify-between border-b p-4">
           <div className="flex items-center">
             <MessageCircle className="text-primary-600 mr-2" size={20} />
-            <h2 className="text-lg font-semibold text-gray-800">Customer Support</h2>
+            <h2 className="text-lg font-semibold text-gray-800">
+              Live Support Chat
+            </h2>
+            <span
+              className={`ml-2 text-xs px-2 py-1 rounded ${
+                connectionStatus === "connected"
+                  ? "bg-green-100 text-green-800"
+                  : connectionStatus === "connecting"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : "bg-red-100 text-red-800"
+              }`}
+            >
+              {connectionStatus === "connected"
+                ? "Connected"
+                : connectionStatus === "connecting"
+                ? "Connecting..."
+                : "Disconnected"}
+            </span>
           </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
             <X size={20} />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          {!showingResponse ? (
-            <div className="p-4">
-              <h3 className="text-sm text-gray-500 mb-4">Select a question to get help:</h3>
-              <div className="space-y-2">
-                {supportQuestions.map((q) => (
-                  <button
-                    key={q.id}
-                    onClick={() => handleSelectQuestion(q.id)}
-                    className="w-full text-left p-3 border rounded-lg hover:bg-gray-50 flex justify-between items-center"
-                  >
-                    <span className="text-gray-800">{q.question}</span>
-                    <ChevronRight size={16} className="text-gray-400" />
-                  </button>
-                ))}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {connectionStatus === "error" ? (
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <div className="bg-red-100 text-red-800 p-4 rounded-lg max-w-md">
+                <h3 className="font-medium">Connection Error</h3>
+                <p className="mt-2 text-sm">
+                  Could not connect to chat service. You can still send
+                  messages, but they may not be received until connection is
+                  restored.
+                </p>
               </div>
+            </div>
+          ) : !currentThread ? (
+            <div className="flex justify-center items-center h-full">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500"></div>
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
+              <MessageCircle size={48} className="mb-4 text-gray-300" />
+              <h3 className="text-lg font-medium">No messages yet</h3>
+              <p className="text-sm">
+                Start a conversation with our support team
+              </p>
             </div>
           ) : (
-            <div className="p-4">
-              <button 
-                onClick={handleBack}
-                className="flex items-center text-primary-600 mb-4"
+            messages.map((message) => (
+              <div
+                key={message._id}
+                className={`flex ${
+                  message.sender._id === user._id ? "justify-end" : "justify-start"
+                }`}
               >
-                <ChevronLeft size={16} className="mr-1" />
-                <span>Back to questions</span>
-              </button>
-              
-              <h3 className="font-medium text-gray-900 mb-2">{selectedQuestionData?.question}</h3>
-              <p className="text-gray-700">{selectedQuestionData?.answer}</p>
-              
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                <p className="text-sm text-gray-700">
-                  Still need help? Our support team is available 24/7.
-                </p>
-                <div className="mt-2 flex space-x-3">
-                  <button 
-                    onClick={handleCallSupport}
-                    className="px-3 py-2 text-xs font-medium bg-primary-600 text-white rounded"
-                  >
-                    Call Support
-                  </button>
-                  <button 
-                    onClick={handleEmailSupport}
-                    className="px-3 py-2 text-xs font-medium border border-primary-600 text-primary-600 rounded"
-                  >
-                    Email Support
-                  </button>
+                <div
+                  className={`max-w-xs md:max-w-md rounded-lg px-4 py-2 ${
+                    message.sender._id === user._id
+                      ? "bg-primary-600 text-white"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  <p>{message.content}</p>
+                  <div className="flex items-center justify-end mt-1 space-x-2">
+                    <p
+                      className={`text-xs ${
+                        message.sender._id === user._id
+                          ? "text-primary-100"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {new Date(message.timestamp).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                    { message.sender._id === user._id && (
+                      <span className="text-xs">
+                        {message.read ? "✓✓" : "✓"}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            ))
           )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        <div className="border-t p-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              placeholder="Type your message..."
+              className="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              disabled={!currentThread}
+            />
+            <button
+              onClick={handleSendMessage}
+              disabled={!newMessage.trim() || !currentThread}
+              className="p-2 rounded-full bg-primary-600 text-white hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              <Send size={20} />
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-// Floating Support Button Component
 const FloatingCustomerCareButton = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [user, setUser] = useState(null);
+  const socketRef = useRef(null);
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+  // Fetch user data on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_SERVER_NAME}user`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setUser(response.data.user);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  // Listen for new messages when chat is closed
+  useEffect(() => {
+    if (!user?._id) return;
+
+    const socket = io(process.env.NEXT_PUBLIC_SOCKET_SERVER, {
+      auth: {
+        token: localStorage.getItem("token"),
+        userId: user._id,
+        role: "user",
+      },
+    });
+
+    socketRef.current = socket;
+
+    const handleNewMessage = (message) => {
+      if (!isModalOpen && message.sender !== user._id) {
+        setUnreadCount((prev) => prev + 1);
+      }
+    };
+
+    socket.on("chat-message", handleNewMessage);
+
+    return () => {
+      socket.off("chat-message", handleNewMessage);
+      socket.disconnect();
+    };
+  }, [user, isModalOpen]);
+
+  const openModal = () => {
+    setIsModalOpen(true);
+    setUnreadCount(0);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
 
   return (
     <>
-      <button
-        onClick={openModal}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-primary-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary-700 transition-colors z-40"
-        aria-label="Customer Support"
-      >
-        <HelpCircle size={24} />
-      </button>
-      
-      <CustomerCareModal 
-        isOpen={isModalOpen}
-        onClose={closeModal}
-      />
+      <div className="fixed bottom-6 right-6 z-40">
+        <button
+          onClick={openModal}
+          className="w-14 h-14 bg-primary-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary-700 transition-colors relative"
+          aria-label="Customer Support"
+        >
+          <HelpCircle size={24} />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              {unreadCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      <CustomerCareModal isOpen={isModalOpen} onClose={closeModal} />
     </>
   );
 };
 
-export { FloatingCustomerCareButton, CustomerCareModal };
+export { FloatingCustomerCareButton };
