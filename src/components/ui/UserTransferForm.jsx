@@ -144,7 +144,7 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
         <div className="fixed inset-0 z-10 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg text-center">
             <AlertCircle size={40} className="text-red-500 mx-auto" />
-            <p className="text-lg font-semibold mt-4">Transaction Failed!</p>
+            <p className="text-lg font-semibold mt-4">Transaction Failed.</p>
             <p className="text-sm text-gray-500">
               Couldn't process transaction. Please contact customer care.
             </p>
