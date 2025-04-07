@@ -68,7 +68,7 @@ export default function RegisterPage() {
               Create Your Account
             </h2>
             <p className="mt-2 text-gray-600">
-              Join GlobalisBank and start managing your finances
+              Join Western Intercontinental bank and start managing your finances
             </p>
           </div>
 
@@ -86,7 +86,7 @@ export default function RegisterPage() {
                     label="First Name"
                     name="firstName"
                     type="text"
-                    placeholder="John"
+                    placeholder="Enter first name"
                     register={register}
                     error={errors.firstName}
                     rules={{ required: "First name is required" }}
@@ -96,7 +96,7 @@ export default function RegisterPage() {
                     label="Last Name"
                     name="lastName"
                     type="text"
-                    placeholder="Doe"
+                    placeholder="Enter last name"
                     register={register}
                     error={errors.lastName}
                     rules={{ required: "Last name is required" }}

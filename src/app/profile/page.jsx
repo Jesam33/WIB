@@ -276,14 +276,14 @@ export default function ProfilePage() {
             <CreditCard size={18} />
             <span>Cards</span>
           </a>
-          <Link
+          {/* <Link
             href="/transfers"
             className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
             onClick={() => setSidebarOpen(false)}
           >
             <Send size={18} />
             <span>Transfers</span>
-          </Link>
+          </Link> */}
           <Link
             href="/history"
             className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
@@ -411,10 +411,13 @@ export default function ProfilePage() {
 
           {/* Profile Details */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-500">Email</h3>
-              <p className="text-gray-900 font-semibold">{user?.email}</p>
-            </div>
+          <div className="bg-gray-50 p-4 rounded-lg overflow-hidden">
+  <h3 className="text-sm font-medium text-gray-500">Email</h3>
+  <p className="text-gray-900 font-semibold break-all truncate">
+    {user?.email}
+  </p>
+</div>
+
             <div className="bg-gray-50 p-4 rounded-lg">
               <h3 className="text-sm font-medium text-gray-500">
                 Account Number
