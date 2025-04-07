@@ -14,7 +14,6 @@ import {
 export default function HelpPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
 
-  // FAQ data
   const faqs = [
     {
       id: 1,
@@ -54,7 +53,6 @@ export default function HelpPage() {
     },
   ];
 
-  // Toggle FAQ answer visibility
   const toggleFaq = (index) => {
     setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
@@ -64,166 +62,163 @@ export default function HelpPage() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-50">
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col ">
-        {/* Help Section */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 m-6">
-          {/* Back Button */}
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
+      <div className="flex-1 p-6 md:p-10">
+        <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6 md:p-10 border border-gray-200">
           <Link
             href="/dashboard"
-            className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium mb-6"
+            className="flex items-center gap-2 text-primary-600 hover:text-primary-800 text-sm font-medium mb-8"
           >
             <ArrowLeft size={16} />
             <span>Back to Dashboard</span>
           </Link>
-          <h1 className="text-2xl font-bold text-blue-700 mb-6">Help Center</h1>
 
-          {/* FAQs Section */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <h1 className="text-3xl font-bold text-primary-700 mb-6">Help Center</h1>
+
+          {/* FAQ Section */}
+          <section className="mb-10">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
               Frequently Asked Questions
             </h2>
             <div className="space-y-4">
               {faqs.map((faq, index) => (
                 <div
                   key={index}
-                  className="bg-gray-50 p-4 rounded-lg border border-gray-200"
+                  className="border rounded-lg p-4 bg-gray-50 transition-shadow hover:shadow-sm"
                 >
                   <button
                     onClick={() => toggleFaq(index)}
-                    className="w-full flex items-center justify-between text-left"
+                    className="w-full flex justify-between items-center text-left"
                   >
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-base font-medium text-gray-800">
                       {faq.question}
                     </span>
                     {openFaqIndex === index ? (
-                      <ChevronUp size={16} className="text-gray-500" />
+                      <ChevronUp size={20} className="text-gray-500" />
                     ) : (
-                      <ChevronDown size={16} className="text-gray-500" />
+                      <ChevronDown size={20} className="text-gray-500" />
                     )}
                   </button>
                   {openFaqIndex === index && (
-                    <p className="text-sm text-gray-600 mt-2">{faq.answer}</p>
+                    <p className="mt-3 text-sm text-gray-600">{faq.answer}</p>
                   )}
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
-          {/* Contact Section */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          {/* Contact Us Section */}
+          <section className="mb-10">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
               Contact Us
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Email Support */}
+            <div className="grid gap-6 md:grid-cols-3">
               <div
-                className="bg-gray-50 p-4 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-400"
+                className="cursor-pointer rounded-lg border p-4 hover:bg-primary-100 transition"
                 onClick={handleEmailSupport}
               >
                 <div className="flex items-center gap-3">
-                  <Mail size={20} className="text-blue-600" />
+                  <Mail size={22} className="text-primary-600" />
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900 ">
+                    <h3 className="font-medium text-gray-900 text-sm">
                       Email Support
                     </h3>
                   </div>
                 </div>
               </div>
 
-              {/* Phone Support */}
               <div
-                className="bg-gray-50 p-4 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-400"
+                className="cursor-pointer rounded-lg border p-4 hover:bg-primary-100 transition"
                 onClick={handleEmailSupport}
               >
                 <div className="flex items-center gap-3">
-                  <Phone size={20} className="text-blue-600" />
+                  <Phone size={22} className="text-primary-600" />
                   <div>
-                    <h3
-                      className="text-sm font-medium text-gray-900"
-                    >
+                    <h3 className="font-medium text-gray-900 text-sm">
                       Phone Support
                     </h3>
                   </div>
                 </div>
               </div>
 
-              {/* Live Chat */}
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-400"
+              <div
+                className="cursor-pointer rounded-lg border p-4 hover:bg-blue-50 transition"
                 onClick={handleEmailSupport}
               >
-                <div className="flex items-center gap-3">
-                  <MessageCircle size={20} className="text-blue-600" />
+                <div className="flex items-start gap-3">
+                  <MessageCircle size={22} className="text-primary-600" />
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900">
+                    <h3 className="font-medium text-gray-900 text-sm">
                       Live Chat
                     </h3>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-xs text-gray-500">
                       Available 24/7 on the app
                     </p>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Contact Form */}
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          {/* Contact Form Section */}
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
               Send Us a Message
             </h2>
-            <form className="space-y-4">
+            <form className="space-y-5">
               <div>
                 <label
                   htmlFor="name"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium text-gray-700 mb-1"
                 >
                   Name
                 </label>
                 <input
                   type="text"
                   id="name"
-                  className="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   placeholder="Enter your name"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
               </div>
+
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium text-gray-700 mb-1"
                 >
                   Email
                 </label>
                 <input
                   type="email"
                   id="email"
-                  className="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   placeholder="Enter your email"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
               </div>
+
               <div>
                 <label
                   htmlFor="message"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium text-gray-700 mb-1"
                 >
                   Message
                 </label>
                 <textarea
                   id="message"
                   rows={4}
-                  className="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   placeholder="How can we help you?"
-                />
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
+                ></textarea>
               </div>
+
               <button
                 type="submit"
-                className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium px-6 py-2 rounded-md transition"
               >
                 Send Message
               </button>
             </form>
-          </div>
+          </section>
         </div>
       </div>
     </div>

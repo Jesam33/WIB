@@ -78,7 +78,7 @@ export default function TransactionTable({ transactions }) {
       <div className="flex justify-between items-center px-4 py-3 border-b bg-gray-50">
         <h2 className="text-lg font-semibold text-gray-800">Transaction History</h2>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-1 text-sm bg-primary-600 text-gray-600 px-2 py-1 rounded hover:bg-gray-100">
+          <button className="flex items-center gap-1 text-sm bg-gray-50 text-gray-600 px-2 py-1 rounded hover:bg-gray-100">
             <Filter size={16} />
             <span className="hidden sm:inline">Filter</span>
           </button>

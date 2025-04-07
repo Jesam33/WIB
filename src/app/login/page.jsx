@@ -94,7 +94,7 @@ function LoginForm() {
                   label="Email"
                   name="email"
                   type="email"
-                  placeholder="john.doe@example.com"
+                  placeholder="enter email here"
                   register={register}
                   error={errors.email}
                   rules={{

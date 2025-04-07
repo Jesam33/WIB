@@ -31,14 +31,17 @@ export default function ProfilePage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [copiedId, setCopiedId] = useState(null); // Track copied item
+  const [copiedId, setCopiedId] = useState(null);
   const [lastLogin, setLastLogin] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
   // Function to get initials from firstName and lastName
   const getInitials = (firstName, lastName) => {
     const firstInitial = firstName ? firstName.charAt(0) : "";
     const lastInitial = lastName ? lastName.charAt(0) : "";
-    return `${firstInitial}${lastInitial}`.toUpperCase(); // Convert to uppercase
+    return `${firstInitial}${lastInitial}`.toUpperCase();
   };
 
   useEffect(() => {
@@ -46,12 +49,10 @@ export default function ProfilePage() {
     const lastLoginTime = localStorage.getItem("lastLoginTime");
 
     if (lastLoginTime) {
-      // Calculate the time difference
       const currentTime = new Date();
       const previousTime = new Date(lastLoginTime);
-      const timeDifference = currentTime - previousTime; // Difference in milliseconds
+      const timeDifference = currentTime - previousTime;
 
-      // Convert the time difference into a human-readable format
       const seconds = Math.floor(timeDifference / 1000);
       const minutes = Math.floor(seconds / 60);
       const hours = Math.floor(minutes / 60);
@@ -68,15 +69,12 @@ export default function ProfilePage() {
         timeAgo = `${seconds} second${seconds > 1 ? "s" : ""} ago`;
       }
 
-      // Update the state with the calculated time
       setLastLogin(timeAgo);
     }
   }, []);
 
   // Fetch user data
   const fetchUserData = async () => {
-  
-
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -94,20 +92,74 @@ export default function ProfilePage() {
       );
 
       setUser(res.data.user);
+      setPreviewUrl(res.data.user?.profileImage || "https://via.placeholder.com/100");
       setLoading(false);
-      console.log("UserData", res.data);
     } catch (error) {
       setError(error.response?.data?.message || "Failed to fetch user data.");
       setLoading(false);
     }
   };
 
-
-
   useEffect(() => {
     fetchUserData();
   }, []);
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Check file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("File size should be less than 5MB", "error");
+        return;
+      }
+      
+      // Check file type
+      if (!file.type.match(/image\/(jpeg|jpg|png)/)) {
+        showToast("Only JPEG/JPG/PNG images are allowed", "error");
+        return;
+      }
+
+      setSelectedFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append("profileImage", selectedFile);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_SERVER_NAME}user/upload-profile-image`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      showToast("Profile image updated successfully", "success");
+      setUser(response.data.user);
+      setSelectedFile(null);
+    } catch (error) {
+      console.error("Upload error:", error);
+      showToast("Failed to upload image. Please try again.", "error");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -119,13 +171,12 @@ export default function ProfilePage() {
     showToast("Please Contact The Customer Care", "warning");
   };
 
-  // Function to copy the account number or FAT ID to the clipboard
   const copyToClipboard = (text) => {
     navigator.clipboard
       .writeText(text)
       .then(() => {
-        setCopiedId(text); // Set the copied text
-        setTimeout(() => setCopiedId(null), 2000); // Reset after 2 seconds
+        setCopiedId(text);
+        setTimeout(() => setCopiedId(null), 2000);
       })
       .catch((err) => {
         console.error("Failed to copy:", err);
@@ -183,7 +234,7 @@ export default function ProfilePage() {
       >
         <div className="p-6 border-b border-gray-200">
           <h1 className="text-2xl font-bold text-primary-700">
-          Western Intercontinetal Bank<span className="text-primary-500"></span>
+            Western Intercontinental Bank<span className="text-primary-500"></span>
           </h1>
           <p className="text-xs text-gray-500 mt-1">Online Banking</p>
         </div>
@@ -225,14 +276,14 @@ export default function ProfilePage() {
             <CreditCard size={18} />
             <span>Cards</span>
           </a>
-          <Link
+          {/* <Link
             href="/transfers"
             className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
             onClick={() => setSidebarOpen(false)}
           >
             <Send size={18} />
             <span>Transfers</span>
-          </Link>
+          </Link> */}
           <Link
             href="/history"
             className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
@@ -277,57 +328,96 @@ export default function ProfilePage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Profile Section */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 m-6">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-  <div className="flex flex-col md:flex-row items-start md:items-center gap-6 w-full">
-    {/* Profile Image and Upload Prompt */}
-    <div className="flex  items-center gap-4">
-      <div className="relative">
-        <img
-          src="https://via.placeholder.com/100"
-          alt="Profile Pic"
-          typeof="image/png"
-          className="w-20 h-20 rounded-full border-2 object-cover"
-        />
-        <div className="absolute bottom-1 right-0 bg-white p-1 rounded-full shadow-sm">
-          <Camera className="text-primary-700 w-5 h-5" />
-        </div>
-      </div>
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-6 w-full">
+              {/* Profile Image and Upload Prompt */}
+              <div className="flex items-center gap-4">
+                <div className="relative group">
+                  <img
+                    src={previewUrl}
+                    alt="Profile"
+                    className="w-20 h-20 rounded-full border-2 border-gray-200 object-cover"
+                  />
+                  <label
+                    htmlFor="profile-upload"
+                    className="absolute bottom-1 right-0 bg-white p-1 rounded-full shadow-sm cursor-pointer hover:bg-gray-100 transition-colors"
+                    title="Change photo"
+                  >
+                    <Camera className="text-primary-700 w-5 h-5" />
+                    <input
+                      id="profile-upload"
+                      type="file"
+                      accept="image/jpeg, image/jpg, image/png"
+                      className="hidden"
+                      onChange={handleFileChange}
+                      disabled={isUploading}
+                    />
+                  </label>
+                </div>
 
-      <div className="flex flex-col justify-center">
-        <p className="text-primary-500 font-semibold text-base">Upload your photo</p>
-        <p className="text-sm text-gray-600 max-w-xs">
-          Click here to select your profile picture. Max size: 5MB
-        </p>
-      </div>
-    </div>
+                <div className="flex flex-col justify-center">
+                  {selectedFile ? (
+                    <>
+                      <p className="text-primary-500 font-semibold text-base">
+                        Ready to upload
+                      </p>
+                      <div className="flex gap-2 mt-1">
+                        <button
+                          onClick={handleUpload}
+                          disabled={isUploading}
+                          className="text-xs px-3 py-1 bg-primary-600 text-white rounded hover:bg-primary-700 disabled:bg-gray-400"
+                        >
+                          {isUploading ? "Uploading..." : "Upload"}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedFile(null);
+                            setPreviewUrl(user?.profileImage || "https://via.placeholder.com/100");
+                          }}
+                          className="text-xs px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-primary-500 font-semibold text-base">
+                        Upload your photo
+                      </p>
+                      <p className="text-sm text-gray-600 max-w-xs">
+                        JPG, JPEG or PNG. Max size: 5MB
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
 
-    {/* User Info */}
-    <div className="b w-full sm:w-fit md:flex lg:flex  gap-14 space-y-4 lg:items-center  sm:ml-auto  sm:flex items-center">
-      <div>
-      <h2 className="text-xl font-semibold text-gray-900">
-        {user?.firstName} {user?.lastName}
-      </h2>
-      <p className="text-sm text-gray-500">Personal Account</p>
-      </div>
-     
-      <button className="flex items-center mr-auto gap-2 px-4 py-2 bg-primary-700 text-white rounded-md hover:bg-blue-100">
-    <Edit size={16} />
-    <span>Edit Profile</span>
-  </button>
-    </div>  {/* Edit Button */}
- 
-  </div>
-
-
-</div>
-
+              {/* User Info */}
+              <div className="b w-full sm:w-fit md:flex lg:flex gap-14 space-y-4 lg:items-center sm:ml-auto sm:flex items-center">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {user?.firstName} {user?.lastName}
+                  </h2>
+                  <p className="text-sm text-gray-500">Personal Account</p>
+                </div>
+                <button className="flex items-center mr-auto gap-2 px-4 py-2 bg-primary-700 text-white rounded-md hover:bg-blue-100">
+                  <Edit size={16} />
+                  <span>Edit Profile</span>
+                </button>
+              </div>
+            </div>
+          </div>
 
           {/* Profile Details */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-500">Email</h3>
-              <p className="text-gray-900 font-semibold">{user?.email}</p>
-            </div>
+          <div className="bg-gray-50 p-4 rounded-lg overflow-hidden">
+  <h3 className="text-sm font-medium text-gray-500">Email</h3>
+  <p className="text-gray-900 font-semibold break-all truncate">
+    {user?.email}
+  </p>
+</div>
+
             <div className="bg-gray-50 p-4 rounded-lg">
               <h3 className="text-sm font-medium text-gray-500">
                 Account Number

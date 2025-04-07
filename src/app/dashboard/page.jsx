@@ -117,9 +117,6 @@ const fetchTransactions = async () => {
 useEffect(() => {
   getUser();
   fetchTransactions();
-
-  const interval = setInterval(fetchTransactions, getUser, 30000); // Every 30 seconds
-  return () => clearInterval(interval);
 }, []);
 
   // Close sidebar when clicking outside on mobile
@@ -258,14 +255,14 @@ useEffect(() => {
             <CreditCard size={18} />
             <span>Cards</span>
           </a>
-          <Link
+          {/* <Link
             href="/transfers"
             className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
             onClick={() => setSidebarOpen(false)}
           >
             <Send size={18} />
             <span>Transfers</span>
-          </Link>
+          </Link> */}
           <Link
             href="/history"
             className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
