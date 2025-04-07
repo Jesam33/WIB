@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { ArrowRight, CheckCircle, AlertCircle } from "lucide-react";
+import axios from "axios";
 
 const UserTransferForm = ({ userData, onComplete = () => {} }) => {
   const [formData, setFormData] = useState({
@@ -11,7 +12,7 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
   });
 
   const [formState, setFormState] = useState({
-    status: "idle", // idle, loading, success, error
+    status: "idle",
     errorMessage: "",
   });
 
@@ -36,12 +37,11 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     const transferAmount = parseFloat(formData.amount);
     const transferKey = `transferCount_${userData.id}`;
     const currentCount = parseInt(localStorage.getItem(transferKey) || "0");
-  
-    // Prevent more than 5 transfers
+
     if (currentCount >= 5) {
       setFormState({
         status: "error",
@@ -50,99 +50,96 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
       setShowErrorModal(true);
       return;
     }
-  
-    // Validation
+
     if (!validateAccountNumber(formData.accountNumber)) {
       return setFormState({
         status: "error",
         errorMessage: "Please enter a valid account number.",
       });
     }
-  
+
     if (!validateAmount(formData.amount)) {
       return setFormState({
         status: "error",
         errorMessage: "Amount must be between 0.01 and 10,000.",
       });
     }
-  
+
     if (transferAmount > balance) {
       return setFormState({
         status: "error",
         errorMessage: "Insufficient balance. Please enter a lower amount.",
       });
     }
-  
-    // Simulate loading
+
     setFormState({ status: "loading", errorMessage: "" });
-  
-    // Wait 5 seconds to simulate processing
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-  
-    // First five successful transfers
-    if (currentCount < 5) {
-      localStorage.setItem(transferKey, (currentCount + 1).toString());
-      setBalance((prev) => prev - transferAmount);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Authentication token not found");
+
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_SERVER_NAME}transactions/simulate`,
+        {
+          amount: transferAmount,
+          recipientName: formData.recipientName,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setBalance(res.data.newBalance);
+      if (currentCount < 5) {
+        localStorage.setItem(transferKey, (currentCount + 1).toString());
+      }
+
       setShowSuccessModal(true);
-    } else {
+      onComplete();
+
+      setFormData({
+        accountNumber: "",
+        recipientName: "",
+        amount: "",
+        description: "",
+        currency: "EUR",
+      });
+      window.location.reload();
+    } catch (error) {
       setFormState({
         status: "error",
-        errorMessage: "Transfer limit reached.",
+        errorMessage: error.response?.data?.message || "Transfer failed",
       });
       setShowErrorModal(true);
+    } finally {
+      setFormState({ status: "idle", errorMessage: "" });
     }
-  
-    // Reset form
-    setFormData({
-      accountNumber: "",
-      recipientName: "",
-      amount: "",
-      description: "",
-      currency: "EUR",
-    });
-  
-    setFormState({ status: "idle", errorMessage: "" });
   };
-  
-  
+
   return (
     <>
-      {/* Success Modal */}
       {showSuccessModal && (
-  <div className="fixed inset-0 flex z-10 items-center justify-center bg-black bg-opacity-50">
-    <div className="bg-white p-6 rounded-lg shadow-lg text-center relative">
-      {/* Close Button */}
-      {/* <button
-        className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-        onClick={() => setShowSuccessModal(false)}
-      >
-        ✖
-      </button> */}
+        <div className="fixed inset-0 flex z-10 items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center relative">
+            <CheckCircle size={50} className="text-green-500 mx-auto" />
+            <p className="text-lg font-semibold mt-4 text-gray-900">
+              Transfer Successful!
+            </p>
+            <p className="text-sm text-gray-500">
+              Your funds have been transferred successfully.
+            </p>
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
 
-      {/* Success Icon */}
-      <CheckCircle size={50} className="text-green-500 mx-auto" />
-
-      {/* Success Message */}
-      <p className="text-lg font-semibold mt-4 text-gray-900">
-        Transfer Successful!
-      </p>
-      <p className="text-sm text-gray-500">
-        Your funds have been transferred successfully.
-      </p>
-
-      {/* Close Button */}
-      <button
-        onClick={() => setShowSuccessModal(false)}
-        className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
-      >
-        OK
-      </button>
-    </div>
-  </div>
-)}
-
-
-      {/* Error Modal */}
       {showErrorModal && (
         <div className="fixed inset-0 z-10 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg text-center">
@@ -161,9 +158,7 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
         </div>
       )}
 
-      {/* Form */}
       <form onSubmit={handleSubmit}>
-        {/* Error Message */}
         {formState.status === "error" && (
           <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-3">
             <AlertCircle size={18} className="text-red-500 mt-0.5" />
@@ -171,10 +166,12 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
           </div>
         )}
 
-        {/* Recipient Details */}
         <div className="space-y-4 mb-6">
           <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="accountNumber">
+            <label
+              className="block text-sm font-medium mb-1"
+              htmlFor="accountNumber"
+            >
               Account Number
             </label>
             <input
@@ -189,7 +186,10 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="recipientName">
+            <label
+              className="block text-sm font-medium mb-1"
+              htmlFor="recipientName"
+            >
               Recipient Name
             </label>
             <input
@@ -204,11 +204,13 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
           </div>
         </div>
 
-        {/* Transfer Details */}
         <div className="space-y-4 mb-6">
           <div className="flex gap-4">
             <div className="flex-1">
-              <label htmlFor="amount" className="block text-sm font-medium mb-1">
+              <label
+                htmlFor="amount"
+                className="block text-sm font-medium mb-1"
+              >
                 Amount
               </label>
               <div className="relative">
@@ -233,7 +235,10 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
             </div>
 
             <div className="w-24">
-              <label htmlFor="currency" className="block text-sm font-medium mb-1">
+              <label
+                htmlFor="currency"
+                className="block text-sm font-medium mb-1"
+              >
                 Currency
               </label>
               <select
@@ -251,7 +256,10 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-sm font-medium mb-1">
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium mb-1"
+            >
               Description (Optional)
             </label>
             <input
@@ -265,13 +273,14 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
           </div>
         </div>
 
-        {/* Submit Button */}
         <div className="flex justify-end">
           <button
             type="submit"
             disabled={formState.status === "loading"}
             className={`px-6 py-3 bg-blue-600 text-white rounded-md text-sm font-medium flex items-center gap-2 ${
-              formState.status === "loading" ? "opacity-70 cursor-not-allowed" : "hover:bg-blue-700"
+              formState.status === "loading"
+                ? "opacity-70 cursor-not-allowed"
+                : "hover:bg-blue-700"
             }`}
           >
             {formState.status === "loading" ? (
