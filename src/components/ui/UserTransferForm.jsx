@@ -8,17 +8,32 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
     amount: "",
     description: "",
     currency: "EUR",
+    otp: "",
   });
 
   const [formState, setFormState] = useState({
-    status: "idle", // idle, loading, success, error
+    status: "idle",
     errorMessage: "",
   });
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [balance, setBalance] = useState(userData.balance);
-  const successCount = useRef(0);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
+  const otpInputsRef = useRef([]);
+  const otpKey = "userOtp";
+  const transferKey = `transferCount_${userData.id}`;
+  const [correctOtp, setCorrectOtp] = useState("");
+
+  const generateOtp = () => {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    localStorage.setItem(otpKey, otp);
+    setCorrectOtp(otp); // Also store in state for verification
+    return otp;
+  };
+
+  const getTypedOtp = () => otpDigits.join("");
 
   const validateAmount = (value) => {
     const numValue = parseFloat(value);
@@ -34,14 +49,30 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleOtpVerify = (e) => {
     e.preventDefault();
-  
+    const enteredOtp = getTypedOtp();
+    const storedOtp = localStorage.getItem(otpKey);
+
+    if (enteredOtp === storedOtp) {
+      setOtpSent(false);
+      handleSubmit(); // Proceed with transfer
+    } else {
+      setFormState({
+        status: "error",
+        errorMessage: "Invalid OTP. Please try again.",
+      });
+      setShowErrorModal(true);
+      setOtpSent(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
+
     const transferAmount = parseFloat(formData.amount);
-    const transferKey = `transferCount_${userData.id}`;
     const currentCount = parseInt(localStorage.getItem(transferKey) || "0");
-  
-    // Prevent more than 5 transfers
+
     if (currentCount >= 5) {
       setFormState({
         status: "error",
@@ -50,97 +81,78 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
       setShowErrorModal(true);
       return;
     }
-  
-    // Validation
+
+    if (!otpSent) {
+      const generatedOtp = generateOtp();
+      alert(`OTP has been sent: ${generatedOtp}`); // Replace with email logic
+      setOtpSent(true);
+      return;
+    }
+
     if (!validateAccountNumber(formData.accountNumber)) {
       return setFormState({
         status: "error",
         errorMessage: "Please enter a valid account number.",
       });
     }
-  
+
     if (!validateAmount(formData.amount)) {
       return setFormState({
         status: "error",
         errorMessage: "Amount must be between 0.01 and 10,000.",
       });
     }
-  
+
     if (transferAmount > balance) {
       return setFormState({
         status: "error",
         errorMessage: "Insufficient balance. Please enter a lower amount.",
       });
     }
-  
-    // Simulate loading
+
     setFormState({ status: "loading", errorMessage: "" });
-  
-    // Wait 5 seconds to simulate processing
+
     await new Promise((resolve) => setTimeout(resolve, 5000));
-  
-    // First five successful transfers
-    if (currentCount < 5) {
-      localStorage.setItem(transferKey, (currentCount + 1).toString());
-      setBalance((prev) => prev - transferAmount);
-      setShowSuccessModal(true);
-    } else {
-      setFormState({
-        status: "error",
-        errorMessage: "Transfer limit reached.",
-      });
-      setShowErrorModal(true);
-    }
-  
-    // Reset form
+
+    localStorage.setItem(transferKey, (currentCount + 1).toString());
+    setBalance((prev) => prev - transferAmount);
+    setShowSuccessModal(true);
+
     setFormData({
       accountNumber: "",
       recipientName: "",
       amount: "",
       description: "",
       currency: "EUR",
+      otp: "",
     });
-  
+
+    setOtpDigits(["", "", "", "", "", ""]);
     setFormState({ status: "idle", errorMessage: "" });
   };
-  
-  
+
   return (
     <>
       {/* Success Modal */}
       {showSuccessModal && (
-  <div className="fixed inset-0 flex z-10 items-center justify-center bg-black bg-opacity-50">
-    <div className="bg-white p-6 rounded-lg shadow-lg text-center relative">
-      {/* Close Button */}
-      {/* <button
-        className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-        onClick={() => setShowSuccessModal(false)}
-      >
-        ✖
-      </button> */}
-
-      {/* Success Icon */}
-      <CheckCircle size={50} className="text-green-500 mx-auto" />
-
-      {/* Success Message */}
-      <p className="text-lg font-semibold mt-4 text-gray-900">
-        Transfer Successful!
-      </p>
-      <p className="text-sm text-gray-500">
-        Your funds have been transferred successfully.
-      </p>
-
-      {/* Close Button */}
-      <button
-        onClick={() => setShowSuccessModal(false)}
-        className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
-      >
-        OK
-      </button>
-    </div>
-  </div>
-)}
-
+        <div className="fixed inset-0 flex z-10 items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center relative">
+            <CheckCircle size={50} className="text-green-500 mx-auto" />
+            <p className="text-lg font-semibold mt-4 text-gray-900">
+              Transfer Successful!
+            </p>
+            <p className="text-sm text-gray-500">
+              Your funds have been transferred successfully.
+            </p>
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Error Modal */}
       {showErrorModal && (
@@ -148,9 +160,7 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
           <div className="bg-white p-6 rounded-lg shadow-lg text-center">
             <AlertCircle size={40} className="text-red-500 mx-auto" />
             <p className="text-lg font-semibold mt-4">Transaction Failed!</p>
-            <p className="text-sm text-gray-500">
-              Couldn't process transaction. Please contact customer care.
-            </p>
+            <p className="text-sm text-gray-500">{formState.errorMessage}</p>
             <button
               onClick={() => setShowErrorModal(false)}
               className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
@@ -163,7 +173,6 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
 
       {/* Form */}
       <form onSubmit={handleSubmit}>
-        {/* Error Message */}
         {formState.status === "error" && (
           <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-3">
             <AlertCircle size={18} className="text-red-500 mt-0.5" />
@@ -171,14 +180,10 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
           </div>
         )}
 
-        {/* Recipient Details */}
         <div className="space-y-4 mb-6">
           <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="accountNumber">
-              Account Number
-            </label>
+            <label className="block text-sm font-medium mb-1">Account Number</label>
             <input
-              id="accountNumber"
               name="accountNumber"
               value={formData.accountNumber}
               onChange={handleInputChange}
@@ -189,11 +194,8 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="recipientName">
-              Recipient Name
-            </label>
+            <label className="block text-sm font-medium mb-1">Recipient Name</label>
             <input
-              id="recipientName"
               name="recipientName"
               value={formData.recipientName}
               onChange={handleInputChange}
@@ -204,26 +206,20 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
           </div>
         </div>
 
-        {/* Transfer Details */}
         <div className="space-y-4 mb-6">
           <div className="flex gap-4">
             <div className="flex-1">
-              <label htmlFor="amount" className="block text-sm font-medium mb-1">
-                Amount
-              </label>
+              <label className="block text-sm font-medium mb-1">Amount</label>
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-gray-500">€</span>
                 <input
-                  id="amount"
                   name="amount"
                   type="number"
                   min="0.01"
                   max="10000"
-                  step="0.01"
                   value={formData.amount}
                   onChange={handleInputChange}
                   required
-                  placeholder="0.00"
                   className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
@@ -233,11 +229,8 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
             </div>
 
             <div className="w-24">
-              <label htmlFor="currency" className="block text-sm font-medium mb-1">
-                Currency
-              </label>
+              <label className="block text-sm font-medium mb-1">Currency</label>
               <select
-                id="currency"
                 name="currency"
                 value={formData.currency}
                 onChange={handleInputChange}
@@ -251,11 +244,8 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-sm font-medium mb-1">
-              Description (Optional)
-            </label>
+            <label className="block text-sm font-medium mb-1">Description</label>
             <input
-              id="description"
               name="description"
               value={formData.description}
               onChange={handleInputChange}
@@ -265,28 +255,67 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
           </div>
         </div>
 
-        {/* Submit Button */}
         <div className="flex justify-end">
           <button
             type="submit"
             disabled={formState.status === "loading"}
             className={`px-6 py-3 bg-blue-600 text-white rounded-md text-sm font-medium flex items-center gap-2 ${
-              formState.status === "loading" ? "opacity-70 cursor-not-allowed" : "hover:bg-blue-700"
+              formState.status === "loading" ? "opacity-70 cursor-not-allowed" : ""
             }`}
           >
-            {formState.status === "loading" ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
-                Transfer Funds <ArrowRight size={16} />
-              </>
-            )}
+            {formState.status === "loading" ? "Processing..." : "Continue"}
+            <ArrowRight size={16} />
           </button>
         </div>
       </form>
+
+      {/* OTP Modal */}
+      {otpSent && (
+        <div className="fixed inset-0 z-20 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center w-[90%] max-w-md relative">
+            <button
+              onClick={() => setOtpSent(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl"
+            >
+              &times;
+            </button>
+            <h2 className="text-lg font-semibold mb-4">Enter the OTP</h2>
+            <div className="flex justify-center gap-2 mb-4">
+              {otpDigits.map((digit, index) => (
+                <input
+                  key={index}
+                  ref={(el) => (otpInputsRef.current[index] = el)}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/, "");
+                    const newDigits = [...otpDigits];
+                    newDigits[index] = value;
+                    setOtpDigits(newDigits);
+                    if (value && index < 5) {
+                      otpInputsRef.current[index + 1]?.focus();
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Backspace" && !otpDigits[index] && index > 0) {
+                      otpInputsRef.current[index - 1]?.focus();
+                    }
+                  }}
+                  className="w-10 h-12 text-center border border-gray-300 rounded-md text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              ))}
+            </div>
+            <button
+              onClick={handleOtpVerify}
+              className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            >
+              Verify & Continue
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };
