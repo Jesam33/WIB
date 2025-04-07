@@ -65,7 +65,6 @@ export default function PropeneerDashboard() {
   useEffect(() => {
     fetchTransactions();
     fetchUserCount();
-
   }, []);
 
   return (
