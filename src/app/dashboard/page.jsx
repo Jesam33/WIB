@@ -118,7 +118,7 @@ useEffect(() => {
   getUser();
   fetchTransactions();
 
-  const interval = setInterval(fetchTransactions, getUser, 30000); // Every 30 seconds
+  const interval = setInterval(fetchTransactions, getUser, 60000); // Every 60 seconds
   return () => clearInterval(interval);
 }, []);
 
