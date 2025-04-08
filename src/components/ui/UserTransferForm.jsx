@@ -1,5 +1,7 @@
 import { useState, useRef } from "react";
 import { ArrowRight, CheckCircle, AlertCircle } from "lucide-react";
+import axios from "axios";
+import { toast, ToastContainer } from "react-toastify"; // Import the toast function
 
 const UserTransferForm = ({ userData, onComplete = () => {} }) => {
   const [formData, setFormData] = useState({
@@ -26,19 +28,47 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
   const transferKey = `transferCount_${userData.id}`;
   const [correctOtp, setCorrectOtp] = useState("");
 
-  const generateOtp = () => {
+  const [loading, setLoading] = useState(false);
+
+  const generateOtp = async () => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     localStorage.setItem(otpKey, otp);
     setCorrectOtp(otp); // Also store in state for verification
-    return otp;
+    try {
+      const response = await axios.post(
+        `/api/send-otp`, // Replace with your API endpoint
+        {
+          to: userData.email, // Assuming userData contains email field
+          otp: otp, // Send OTP to the backend
+        }
+      );
+
+      if (response.status === 200) {
+        setOtpSent(true); // Successfully sent OTP
+        toast.success("OTP has been sent successfully!");
+      } else {
+        setFormState({
+          status: "error",
+          errorMessage: "Failed to send OTP. Please try again.",
+        });
+        setShowErrorModal(true);
+      }
+    } catch (error) {
+      setFormState({
+        status: "error",
+        errorMessage: "Error sending OTP. Please try again.",
+      });
+      setShowErrorModal(true);
+    }
   };
 
   const getTypedOtp = () => otpDigits.join("");
 
   const validateAmount = (value) => {
-    const numValue = parseFloat(value);
-    return !isNaN(numValue) && numValue > 0 && numValue <= 10000;
+    const numValue = Number(value);
+    return Number.isInteger(numValue) && numValue > 0;  // Only check for whole numbers
   };
+  
 
   const validateAccountNumber = (value) => {
     return value.length >= 10 && /^[0-9\s]+$/.test(value);
@@ -56,6 +86,8 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
 
     if (enteredOtp === storedOtp) {
       setOtpSent(false);
+      toast.success("Otp Verified Successfully!");
+      setLoading(false);
       handleSubmit(); // Proceed with transfer
     } else {
       setFormState({
@@ -83,9 +115,7 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
     }
 
     if (!otpSent) {
-      const generatedOtp = generateOtp();
-      alert(`OTP has been sent: ${generatedOtp}`); // Replace with email logic
-      setOtpSent(true);
+      await generateOtp(); // Generate the OTP
       return;
     }
 
@@ -129,11 +159,54 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
 
     setOtpDigits(["", "", "", "", "", ""]);
     setFormState({ status: "idle", errorMessage: "" });
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Authentication token not found");
+
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_SERVER_NAME}transactions/simulate`,
+        {
+          amount: transferAmount,
+          recipientName: formData.recipientName,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setBalance(res.data.newBalance);
+      if (currentCount < 5) {
+        localStorage.setItem(transferKey, (currentCount + 1).toString());
+      }
+
+      setShowSuccessModal(true);
+      onComplete();
+
+      setFormData({
+        accountNumber: "",
+        recipientName: "",
+        amount: "",
+        description: "",
+        currency: "EUR",
+      });
+      window.location.reload();
+    } catch (error) {
+      setFormState({
+        status: "error",
+        errorMessage: error.response?.data?.message || "Transfer failed",
+      });
+      setShowErrorModal(true);
+    } finally {
+      setFormState({ status: "idle", errorMessage: "" });
+    }
   };
 
   return (
     <>
-      {/* Success Modal */}
+    <ToastContainer />
       {showSuccessModal && (
         <div className="fixed inset-0 flex z-10 items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg text-center relative">
@@ -161,6 +234,10 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
             <AlertCircle size={40} className="text-red-500 mx-auto" />
             <p className="text-lg font-semibold mt-4">Transaction Failed!</p>
             <p className="text-sm text-gray-500">{formState.errorMessage}</p>
+            <p className="text-lg font-semibold mt-4">Transaction Failed.</p>
+            <p className="text-sm text-gray-500">
+              Couldn't process transaction. Please contact customer care.
+            </p>
             <button
               onClick={() => setShowErrorModal(false)}
               className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
@@ -171,7 +248,6 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
         </div>
       )}
 
-      {/* Form */}
       <form onSubmit={handleSubmit}>
         {formState.status === "error" && (
           <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-3">
@@ -182,7 +258,12 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
 
         <div className="space-y-4 mb-6">
           <div>
-            <label className="block text-sm font-medium mb-1">Account Number</label>
+            <label
+              className="block text-sm font-medium mb-1"
+              htmlFor="accountNumber"
+            >
+              Account Number
+            </label>
             <input
               name="accountNumber"
               value={formData.accountNumber}
@@ -194,7 +275,12 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Recipient Name</label>
+            <label
+              className="block text-sm font-medium mb-1"
+              htmlFor="recipientName"
+            >
+              Recipient Name
+            </label>
             <input
               name="recipientName"
               value={formData.recipientName}
@@ -209,19 +295,25 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
         <div className="space-y-4 mb-6">
           <div className="flex gap-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium mb-1">Amount</label>
+              <label
+                htmlFor="amount"
+                className="block text-sm font-medium mb-1"
+              >
+                Amount
+              </label>
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-gray-500">€</span>
                 <input
-                  name="amount"
-                  type="number"
-                  min="0.01"
-                  max="10000"
-                  value={formData.amount}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
+  name="amount"
+  type="number"
+  value={formData.amount}
+  onChange={handleInputChange}
+  required
+  inputMode="numeric"  // Ensures only numeric values are entered
+  step="1"  // This ensures only whole numbers can be entered
+  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+/>
+
               </div>
               <p className="text-xs text-gray-500 mt-1">
                 Available balance: {formData.currency} {balance.toFixed(2)}
@@ -229,7 +321,12 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
             </div>
 
             <div className="w-24">
-              <label className="block text-sm font-medium mb-1">Currency</label>
+              <label
+                htmlFor="currency"
+                className="block text-sm font-medium mb-1"
+              >
+                Currency
+              </label>
               <select
                 name="currency"
                 value={formData.currency}
@@ -244,7 +341,12 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium mb-1"
+            >
+              Description (Optional)
+            </label>
             <input
               name="description"
               value={formData.description}
@@ -260,7 +362,9 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
             type="submit"
             disabled={formState.status === "loading"}
             className={`px-6 py-3 bg-blue-600 text-white rounded-md text-sm font-medium flex items-center gap-2 ${
-              formState.status === "loading" ? "opacity-70 cursor-not-allowed" : ""
+              formState.status === "loading"
+                ? "opacity-70 cursor-not-allowed"
+                : "hover:bg-blue-700"
             }`}
           >
             {formState.status === "loading" ? "Processing..." : "Continue"}
@@ -309,9 +413,31 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
             </div>
             <button
               onClick={handleOtpVerify}
-              className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+              className={`w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition ${loading ? "cursor-wait" : ""}`}
+              disabled={loading}
             >
-              Verify & Continue
+              {loading ? (
+                <div className="flex justify-center items-center">
+                  <svg
+                    className="w-6 h-6 animate-spin text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4 12a8 8 0 0116 0"
+                      className="opacity-75"
+                    />
+                  </svg>
+                </div>
+              ) : (
+                "Verify & Continue"
+              )}
             </button>
           </div>
         </div>

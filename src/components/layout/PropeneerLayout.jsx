@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from 'next/router';
+import { usePathname } from 'next/navigation';
 import Link from "next/link";
 import {
   BarChart3,
@@ -16,6 +18,8 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
+
+
 const PropeneerLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [propeneer, setPropeneer] = useState({});
@@ -24,6 +28,18 @@ const PropeneerLayout = ({ children }) => {
   const getAuthToken = () => {
     return localStorage.getItem("adminToken");
   };
+
+  const currentPath = usePathname();
+  
+const isActive = (path) => currentPath === path;
+// className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-primary-700 bg-primary-100 border-l-4 border-primary-600 hover:bg-primary-100"
+const linkClass = (path) =>
+  `flex items-center gap-3 px-4 py-3 text-sm font-medium text-primary-700 hover:bg-primary-100 ${
+    isActive(path)
+      ? "text-primary-700 bg-primary-100 border-l-4 border-primary-600"
+      : "text-gray-600 hover:bg-primary-100"
+  }`;
+
 
   const getPropeneer = async () => {
     try {
@@ -78,10 +94,14 @@ const PropeneerLayout = ({ children }) => {
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         } transition-transform duration-300 ease-in-out overflow-y-auto`}
       >
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        
+        <div className="p-6 border-b border-gray-200">
           <h1 className="text-2xl font-bold text-primary-700">
-            Globalis<span className="text-primary-500">Bank</span>
+            Western Intercontinental{" "}
+            <span className="text-primary-500">Bank</span>
           </h1>
+          <p className="text-xs text-gray-500 mt-1">Online Banking</p>
+    
           <button className="lg:hidden" onClick={() => setSidebarOpen(false)}>
             <X size={24} className="text-gray-500" />
           </button>
@@ -108,28 +128,28 @@ const PropeneerLayout = ({ children }) => {
           </div>
           <Link
             href="/propeneer-dashboard"
-            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-primary-700 bg-primary-100 border-l-4 border-primary-600"
+            className={linkClass("/propeneer-dashboard")}
           >
             <BarChart3 size={18} />
             <span>Dashboard</span>
           </Link>
           <Link
             href="/propeneer-users"
-            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-primary-100"
+            className={linkClass("/propeneer-users")}
           >
             <Users size={18} />
             <span>Users</span>
           </Link>
           <Link
             href="/propeneer-transactions"
-            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-primary-100"
+            className={linkClass("/propeneer-transactions")}
           >
             <ArrowUpDown size={18} />
             <span>Transactions</span>
           </Link>
           <Link
             href="/propeneer-messages"
-            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-primary-100"
+            className={linkClass("/propeneer-messsages")}
           >
             <MessageCircle size={18} />
             <span>Messages</span>
@@ -142,7 +162,7 @@ const PropeneerLayout = ({ children }) => {
           </div>
           <Link
             href="/propeneer-dasboard"
-            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-primary-100"
+            className={linkClass("/propeneer-dashboard")}
           >
             <Wallet size={18} />
             <span>Banking Settings</span>

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { MessageCircle, X, Send, HelpCircle } from "lucide-react";
 import io from "socket.io-client";
 import axios from "axios";
+import { FaComment } from "react-icons/fa";
 
 const CustomerCareModal = ({ isOpen, onClose }) => {
   const [messages, setMessages] = useState([]);
@@ -424,7 +425,7 @@ const FloatingCustomerCareButton = () => {
           className="w-14 h-14 bg-primary-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary-700 transition-colors relative"
           aria-label="Customer Support"
         >
-          <HelpCircle size={24} />
+          <FaComment size={24} />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
               {unreadCount}

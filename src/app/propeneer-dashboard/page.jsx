@@ -14,6 +14,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import axios from "axios";
+import {taost, ToastContainer} from "react-toastify"
 
 export default function PropeneerDashboard() {
   const [transactions, setTransactions] = useState([]);
@@ -69,6 +70,7 @@ export default function PropeneerDashboard() {
 
   return (
     <PropeneerLayout>
+      <ToastContainer />
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {/* User Count Card - Now shows real data */}

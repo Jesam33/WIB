@@ -63,7 +63,7 @@ export default function PropeneerTransferForm({ setTransactions }) {
       );
 
       setSuccess("Transfer initiated successfully!");
-      setTransactions((prev) => [res.data.transaction, ...prev]); // Add new transaction
+      setTransactions((prev) => [res.data.transaction, ...prev]); 
       setAccountNumber("");
       setAmount("");
       setReceiver(null); // Reset receiver
@@ -74,8 +74,8 @@ export default function PropeneerTransferForm({ setTransactions }) {
 
   return (
     <form onSubmit={handleTransfer} className="mb-8">
-      <h2 className="text-xl font-semibold text-blue-600 mb-4">Initiate Transfer</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <h2 className="text-xl font-semibold text-primary-600 mb-4">Initiate Transfer</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-[20px]">
         <div>
           <input
             type="text"
@@ -83,7 +83,7 @@ export default function PropeneerTransferForm({ setTransactions }) {
             value={accountNumber}
             onChange={(e) => setAccountNumber(e.target.value)}
             onBlur={searchUser} // Search when user leaves the input
-            className="p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            className="p-3 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
             required
           />
           {receiver && (
@@ -97,7 +97,7 @@ export default function PropeneerTransferForm({ setTransactions }) {
           placeholder="Amount"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+          className="p-3 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
           required
         />
       </div>
@@ -105,7 +105,7 @@ export default function PropeneerTransferForm({ setTransactions }) {
       {success && <p className="text-green-500 mt-2">{success}</p>}
       <button
         type="submit"
-        className="mt-4 bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors"
+        className="mt-4 bg-primary-600 text-white py-2 px-6 rounded-lg hover:bg-primary-700 transition-colors"
         disabled={!receiver} // Disable button if no receiver is found
       >
         Transfer

@@ -1,38 +1,42 @@
-import nodemailer from "nodemailer";
+import nodemailer from 'nodemailer';
 
 export async function POST(request) {
-  const body = await request.json();
-  const { to, otp } = body;
-
-  if (!to || !otp) {
-    return new Response(JSON.stringify({ message: "Missing email or OTP" }), {
-      status: 400,
-    });
-  }
+  const { to, otp } = await request.json();
 
   const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: 'smtp.gmail.com', // SMTP host
+      port: 587, // SMTP port
+      secure: false, // true for 465, false for other ports
+    service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
   });
 
-  try {
-    await transporter.sendMail({
-      from: `"My App" <${process.env.EMAIL_USER}>`,
-      to,
-      subject: "Your OTP Code",
-      html: `<p>Your OTP code is: <strong>${otp}</strong></p>`,
-    });
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: to,
+    subject: 'Your OTP Code',
+    text: `Your OTP code is: ${otp}`,
+  };
 
-    return new Response(JSON.stringify({ message: "OTP sent successfully" }), {
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Message sent: %s', info.messageId);
+    return new Response(JSON.stringify({ message: 'OTP sent successfully!' }), {
       status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
   } catch (error) {
-    console.error("Nodemailer error:", error);
-    return new Response(JSON.stringify({ message: "Failed to send OTP" }), {
+    console.error('Error sending OTP:', error);
+    return new Response(JSON.stringify({ message: 'Error sending OTP', error: error.message }), {
       status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
   }
 }

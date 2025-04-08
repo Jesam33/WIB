@@ -135,7 +135,7 @@ export default function UsersDashboard() {
     <PropeneerLayout>
       <div className="p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-primary-600 flex items-center gap-2">
             <Users size={24} className="text-primary-600" />
             Users Management
           </h1>
