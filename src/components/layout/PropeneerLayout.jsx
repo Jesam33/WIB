@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   MessageCircle,
+  Settings,
 } from "lucide-react";
 import axios from "axios";
 
@@ -161,11 +162,11 @@ const linkClass = (path) =>
             </p>
           </div>
           <Link
-            href="/admin-dasboard"
-            className={linkClass("/propeneer-dashboard")}
+            href="/admin-settings"
+            className={linkClass("/propeneer-settings")}
           >
-            <Wallet size={18} />
-            <span>Banking Settings</span>
+            <Settings size={18} />
+            <span>Admin Settings</span>
           </Link>
         </nav>
       </div>

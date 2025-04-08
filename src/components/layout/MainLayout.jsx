@@ -16,6 +16,7 @@ const MainLayout = ({ children }) => {
     "/admin-checkout",
     "/admin-success",
     "/admin-fail",
+    "/admin-settings",
     "/login",
     "/register",
   ].includes(pathname);
