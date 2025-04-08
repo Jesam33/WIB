@@ -249,7 +249,7 @@ export default function History() {
           </Link> */}
           <Link
             href="/history"
-            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-blue-700 bg-blue-50 border-l-4 border-blue-600"
+            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-primary-700 bg-blue-50 border-l-4 border-primary-600"
             onClick={() => setSidebarOpen(false)}
           >
             <ArrowUpDown size={18} />
