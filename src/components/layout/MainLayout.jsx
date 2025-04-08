@@ -11,17 +11,17 @@ const MainLayout = ({ children }) => {
 
   // Check if the current page is an auth page
   const isAuthPage = [
-    "/propeneer-login",
-    "/propeneer-register",
-    "/propeneer-checkout",
-    "/propeneer-success",
-    "/propeneer-fail",
+    "/admin-login",
+    "/admin-register",
+    "/admin-checkout",
+    "/admin-success",
+    "/admin-fail",
     "/login",
     "/register",
   ].includes(pathname);
 
   // Check if the current page is a Propeneer page
-  const isPropeneerPage = pathname.includes("propeneer");
+  const isPropeneerPage = pathname.includes("admin");
 
   return (
     <div className="min-h-screen flex flex-col">

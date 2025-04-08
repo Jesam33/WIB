@@ -40,7 +40,7 @@ export default function PropeneerRegisterPage() {
   const checkUsernameAvailability = async (username) => {
     try {
       const response = await axios.post(
-        `${SERVER_NAME}propeneer/check-username`,
+        `${SERVER_NAME}admin/check-username`,
         { username }
       );
       return response.data.isTaken;
@@ -79,12 +79,12 @@ export default function PropeneerRegisterPage() {
     setError("");
 
     try {
-      const response = await axios.post(`${SERVER_NAME}propeneer/register`, data);
+      const response = await axios.post(`${SERVER_NAME}admin/register`, data);
 
       setSuccess(true);
 
       setTimeout(() => {
-        router.push("/propeneer-login");
+        router.push("/admin-login");
       }, 2000);
     } catch (error) {
       console.error("Registration error:", error);

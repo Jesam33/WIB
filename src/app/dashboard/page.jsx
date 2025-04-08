@@ -39,6 +39,7 @@ export default function UserDashboard() {
     currency: "EUR",
     accountStatus: "Active",
   });
+  const [showForm, setShowForm] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [firstName, setFirstName] = useState(() => {});
@@ -64,6 +65,10 @@ export default function UserDashboard() {
  // Get token from localStorage (either adminToken or token)
  const getAuthToken = () => {
   return localStorage.getItem("token");
+};
+
+const handleFormClose = () => {
+  setShowForm(false); // Hides the UserTransferForm completely
 };
 
 const getUser = async () => {
@@ -472,7 +477,10 @@ useEffect(() => {
             <div className="p-4 md:p-6">
               <UserTransferForm
                 userData={user}
-                onComplete={() => setShowTransferModal(false)}
+                onComplete={() => {
+                  setShowTransferModal(false); // closes the modal
+                }}
+                onClose={handleFormClose}
                 quickAccounts={quickAccounts}
               />
             </div>

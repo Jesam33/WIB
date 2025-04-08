@@ -19,7 +19,7 @@ export default function PropeneerSuccessPage() {
       
       return () => clearTimeout(timer);
     } else {
-      router.push('/propeneer-register');
+      router.push('/admin-register');
     }
   }, [countdown, router]);
   
@@ -50,7 +50,7 @@ export default function PropeneerSuccessPage() {
           <Button 
             variant="primary" 
             fullWidth 
-            onClick={() => router.push('/propeneer-register')}
+            onClick={() => router.push('/admin-register')}
           >
             Continue to Registration
           </Button>

@@ -29,7 +29,7 @@ export default function PropeneerLoginPage() {
       if (response.data?.token) { 
         localStorage.setItem("adminToken", response.data.token);
   
-        router.push('/propeneer-dashboard');
+        router.push('/admin-dashboard');
       } else {
         setError('Invalid credentials');
       }
@@ -48,10 +48,10 @@ export default function PropeneerLoginPage() {
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-gray-900">
-              Propeneer Login
+              Admin Login
             </h2>
             <p className="mt-2 text-gray-600">
-              Sign in to access your Propeneer dashboard
+              Sign in to access your Admin dashboard
             </p>
           </div>
           
@@ -114,7 +114,7 @@ export default function PropeneerLoginPage() {
                 </Button>
               </form>
               
-              <div className="mt-6">
+              {/* <div className="mt-6">
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-gray-300" />
@@ -133,14 +133,14 @@ export default function PropeneerLoginPage() {
                     </Button>
                   </Link>
                 </div>
-              </div>
+              </div> */}
             </div>
             
-            <div className="mt-6 text-center">
+            {/* <div className="mt-6 text-center">
               <Link href="/login" className="text-sm text-primary-500 hover:text-primary-600">
                 Regular user? Login here
               </Link>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

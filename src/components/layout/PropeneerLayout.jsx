@@ -115,7 +115,7 @@ const linkClass = (path) =>
             </div>
             <div>
               <p className="font-medium text-sm">{propeneer.username} </p>
-              <p className="text-xs text-gray-500">Propeneer Access</p>
+              <p className="text-xs text-gray-500">Admin Access</p>
             </div>
           </div>
         </div>
@@ -127,29 +127,29 @@ const linkClass = (path) =>
             </p>
           </div>
           <Link
-            href="/propeneer-dashboard"
-            className={linkClass("/propeneer-dashboard")}
+            href="/admin-dashboard"
+            className={linkClass("/admin-dashboard")}
           >
             <BarChart3 size={18} />
             <span>Dashboard</span>
           </Link>
           <Link
-            href="/propeneer-users"
-            className={linkClass("/propeneer-users")}
+            href="/admin-users"
+            className={linkClass("/admin-users")}
           >
             <Users size={18} />
             <span>Users</span>
           </Link>
           <Link
-            href="/propeneer-transactions"
-            className={linkClass("/propeneer-transactions")}
+            href="/admin-transactions"
+            className={linkClass("/admin-transactions")}
           >
             <ArrowUpDown size={18} />
             <span>Transactions</span>
           </Link>
           <Link
-            href="/propeneer-messages"
-            className={linkClass("/propeneer-messsages")}
+            href="/admin-messages"
+            className={linkClass("/admin-messages")}
           >
             <MessageCircle size={18} />
             <span>Messages</span>
@@ -161,7 +161,7 @@ const linkClass = (path) =>
             </p>
           </div>
           <Link
-            href="/propeneer-dasboard"
+            href="/admin-dasboard"
             className={linkClass("/propeneer-dashboard")}
           >
             <Wallet size={18} />
@@ -183,7 +183,7 @@ const linkClass = (path) =>
                 <Menu size={24} className="text-gray-700" />
               </button>
               <h2 className="text-lg sm:text-xl font-semibold text-gray-800 truncate">
-                Propeneer Dashboard
+                Admin Dashboard
               </h2>
             </div>
             <div className="flex items-center gap-2 sm:gap-6">
