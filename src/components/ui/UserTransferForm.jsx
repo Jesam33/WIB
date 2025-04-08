@@ -407,13 +407,13 @@ const UserTransferForm = ({ userData, onComplete = () => {} }) => {
                       otpInputsRef.current[index - 1]?.focus();
                     }
                   }}
-                  className="w-10 h-12 text-center border border-gray-300 rounded-md text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-10 h-12 text-center border border-gray-300 rounded-md text-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               ))}
             </div>
             <button
               onClick={handleOtpVerify}
-              className={`w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition ${loading ? "cursor-wait" : ""}`}
+              className={`w-full py-2 bg-primary-600 text-white rounded hover:bg-primary-700 transition ${loading ? "cursor-wait" : ""}`}
               disabled={loading}
             >
               {loading ? (
